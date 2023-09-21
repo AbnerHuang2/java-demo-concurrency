@@ -8,4 +8,7 @@
 3. 我要怎么整理成我自己的东西
 
 大概实现思路：
-![img.png](../../../../../../../img/img.png)
+![img.png](../../../../../../../img/thread-pool-simple.png)
+
+## 线程池初始化
+通过一个AtomicInteger来维护线程池状态和worker线程数量，通过一个阻塞队列来维护任务队列。

@@ -73,16 +73,8 @@ public class LearnThreadPoolExecutor {
             c = ctl.get();
         }
         if (isRunning(c) && workQueue.offer(command)) {
-            /**
-             * 再次检查线程池状态，因为可能在上一步骤中线程池状态发生了变化
-             */
-            int recheck = ctl.get();
-            if (! isRunning(recheck) && remove(command)) {
-                reject(command);
-            } else if (workerCountOf(recheck) == 0) {
-                // 任务放进队列后，线程池中没有线程了，那么尝试创建一个非核心线程去队列中获取任务执行
-                addWorker(null, false);
-            }
+            System.out.println("核心线程满了， 任务入队 ....");
+            addWorker(null, false);
         } else if (!addWorker(command, false)) {    //线程池状态不在运行，也尝试一下创建非核心线程
             reject(command);
         }
@@ -99,6 +91,10 @@ public class LearnThreadPoolExecutor {
     private void reject(Runnable command) {
         //可以设置一些拒绝策略，这里就简单抛异常了
         throw new RuntimeException("task reject");
+    }
+
+    public void shutdown() {
+
     }
 
     /**
@@ -124,6 +120,7 @@ public class LearnThreadPoolExecutor {
                     int wc = workerCountOf(c);
                     //如果线程数量超过了最大值，那么不允许添加新的线程
                     if (wc >= CAPACITY || wc >= (core ? corePoolSize : maximumPoolSize)) {
+                        System.err.println("最大线程数了，不允许添加新的线程 ！！！");
                         return false;
                     }
                     //尝试增加线程数量
@@ -162,6 +159,7 @@ public class LearnThreadPoolExecutor {
                 }
                 if (workerAdded) {
                     t.start();
+                    System.err.println("线程"+t.getName()+"启动成功了，线程池中的线程数量：" + workerCountOf(ctl.get()));
                     workerStarted = true;
                 }
             }
@@ -207,11 +205,18 @@ public class LearnThreadPoolExecutor {
         private void runWorker(Worker w) {
             Runnable task = w.firstTask;
             w.firstTask = null;
-            if (task != null || (task = getTask()) != null) {
+            while (task != null || (task = getTask()) != null) {
                 task.run();
-                //任务执行完毕，减少线程池中的线程数量
-                ctl.decrementAndGet();
+                task = null;
+                if (workQueue.isEmpty()){
+                    //如果队列中没有任务了，那么退出循环
+                    break;
+                }
             }
+            //任务执行完毕，减少线程池中的线程数量
+            ctl.decrementAndGet();
+            workers.remove(this);
+            System.out.println("线程 "+Thread.currentThread().getName()+" 执行退出，线程池中的线程数量：" + workerCountOf(ctl.get()));
         }
 
         private Runnable getTask() {

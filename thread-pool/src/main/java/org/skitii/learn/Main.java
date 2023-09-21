@@ -11,7 +11,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class Main {
 
     public static void main(String[] args) throws InterruptedException {
-        LearnThreadPoolExecutor executor = new LearnThreadPoolExecutor(5, 8, 10, new LinkedBlockingQueue<>(10));
+        LearnThreadPoolExecutor executor = new LearnThreadPoolExecutor(5, 8, 10, new LinkedBlockingQueue<>(3));
         for (int i = 0; i < 10; i++) {
             Thread.sleep(100L);
             int finalI = i;
@@ -21,20 +21,12 @@ public class Main {
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
-                System.out.println("hello"+ finalI);
+                System.out.println(Thread.currentThread().getName()+" 执行任务 "+ finalI);
             });
         }
 
-    }
+        executor.shutdown();
 
-    public static void testRequest() {
-        retry1:
-        for (int i = 0; i < 10; i++) {
-            while (i == 5) {
-                continue retry1;
-            }
-            System.out.print(i + " ");
-        }
     }
 
 }
