@@ -63,6 +63,7 @@ public class LearnThreadPoolExecutor {
          * 2.如果线程池中的线程数 >= corePoolSize，那么将这个任务放入队列
          * 3.如果队列满了且线程池中的线程数 < maximumPoolSize，那么创建非核心线程运行这个任务
          * 4.如果队列满了且线程池中的线程数 >= maximumPoolSize，那么线程池会启动饱和拒绝策略来执行
+         * 5.最后都失败了，也尝试创建一下非核心线程，可能在创建的时候，刚好有线程执行完呢
          */
         int c = ctl.get();
         if (workerCountOf(c) < corePoolSize) {
@@ -79,9 +80,10 @@ public class LearnThreadPoolExecutor {
             if (! isRunning(recheck) && remove(command)) {
                 reject(command);
             } else if (workerCountOf(recheck) == 0) {
+                // 任务放进队列后，线程池中没有线程了，那么尝试创建一个非核心线程去队列中获取任务执行
                 addWorker(null, false);
             }
-        } else if (!addWorker(command, false)) {
+        } else if (!addWorker(command, false)) {    //线程池状态不在运行，也尝试一下创建非核心线程
             reject(command);
         }
     }
@@ -205,8 +207,10 @@ public class LearnThreadPoolExecutor {
         private void runWorker(Worker w) {
             Runnable task = w.firstTask;
             w.firstTask = null;
-            while (task != null || (task = getTask()) != null) {
+            if (task != null || (task = getTask()) != null) {
                 task.run();
+                //任务执行完毕，减少线程池中的线程数量
+                ctl.decrementAndGet();
             }
         }
 

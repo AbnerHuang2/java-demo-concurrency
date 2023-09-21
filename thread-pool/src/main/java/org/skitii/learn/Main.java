@@ -1,5 +1,6 @@
 package org.skitii.learn;
 
+import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -8,12 +9,22 @@ import java.util.concurrent.atomic.AtomicInteger;
  * @since 2023/09/20
  **/
 public class Main {
-    private static AtomicInteger ato = new AtomicInteger(0);
+
     public static void main(String[] args) throws InterruptedException {
-        LearnThreadPoolExecutor executor = new LearnThreadPoolExecutor(2, 4, 10, new LinkedBlockingQueue<>(10));
-        executor.execute(() -> {
-            System.out.println("hello");
-        });
+        LearnThreadPoolExecutor executor = new LearnThreadPoolExecutor(5, 8, 10, new LinkedBlockingQueue<>(10));
+        for (int i = 0; i < 10; i++) {
+            Thread.sleep(100L);
+            int finalI = i;
+            executor.execute(() -> {
+                try {
+                    Thread.sleep(1000L);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+                System.out.println("hello"+ finalI);
+            });
+        }
+
     }
 
     public static void testRequest() {
