@@ -208,10 +208,6 @@ public class LearnThreadPoolExecutor {
             while (task != null || (task = getTask()) != null) {
                 task.run();
                 task = null;
-                if (workQueue.isEmpty()){
-                    //如果队列中没有任务了，那么退出循环
-                    break;
-                }
             }
             //任务执行完毕，减少线程池中的线程数量
             ctl.decrementAndGet();
@@ -222,6 +218,9 @@ public class LearnThreadPoolExecutor {
         private Runnable getTask() {
             for (; ; ) {
                 try {
+                    if (workQueue.isEmpty()){
+                        return null;
+                    }
                     Runnable r = workQueue.take();
                     if (r != null) {
                         return r;
